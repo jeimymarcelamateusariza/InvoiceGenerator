@@ -1,0 +1,6 @@
+project: InvoiceGenerator
+mode: openspec
+strict_tdd: false
+testing:
+  runner: none
+  frameworks: []
