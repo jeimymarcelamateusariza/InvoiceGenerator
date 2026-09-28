@@ -15,8 +15,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If there's no auth_token cookie, redirect to the main app's login
-  if (!authToken) {
+  // If there's no auth_token cookie and the user isn't already going to login, redirect
+  if (!authToken && !pathname.startsWith('/login')) {
     const loginUrl = process.env.NEXT_PUBLIC_LOGIN_URL || 'http://localhost:3000/login';
     return NextResponse.redirect(new URL(loginUrl));
   }
