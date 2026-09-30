@@ -1,6 +1,8 @@
+import React from 'react';
 import { NextResponse } from 'next/server';
 import { renderToStream } from '@react-pdf/renderer';
 import InvoicePdf from '../../../components/invoice/InvoicePdf';
+
 
 export async function GET(
   request: Request,
@@ -24,7 +26,7 @@ export async function GET(
       total: 238
     };
 
-    const stream = await renderToStream(<InvoicePdf invoice={mockInvoice} />);
+    const stream = await renderToStream(React.createElement(InvoicePdf, { invoice: mockInvoice as any }));
     
     const readableStream = new ReadableStream({
       start(controller) {
