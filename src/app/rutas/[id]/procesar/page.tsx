@@ -32,6 +32,12 @@ import {
 import { toast } from 'sonner';
 import { invoiceService } from '@/features/invoices/api/invoiceService';
 import type { InvoiceFromApi } from '@/features/invoices/types';
+import { RouteCsvUploader } from '@/features/routes/components/RouteCsvUploader';
+import { RouteCsvValidationReport } from '@/features/routes/components/RouteCsvValidationReport';
+import {
+  parseAndValidateCsv,
+  type CsvValidationReport,
+} from '@/features/routes/services/csvRouteOrderingService';
 
 export interface RouteClientProcessingState {
   clientId: string;
@@ -88,6 +94,21 @@ export default function BatchProcessRoutePage() {
     isRunning: false,
     isCompleted: false,
   });
+
+  // State hooks for CSV Route Ordering
+  const [csvReport, setCsvReport] = useState<CsvValidationReport | null>(null);
+  const [csvFileName, setCsvFileName] = useState<string | null>(null);
+
+  const handleCsvFileSelected = (fileContent: string, fileName: string) => {
+    const report = parseAndValidateCsv(fileContent, clientStates);
+    setCsvReport(report);
+    setCsvFileName(fileName);
+  };
+
+  const handleResetCsv = () => {
+    setCsvReport(null);
+    setCsvFileName(null);
+  };
 
   // Ref to cancel or track active processing execution loop if needed
   const isCancelledRef = useRef<boolean>(false);
@@ -146,6 +167,8 @@ export default function BatchProcessRoutePage() {
     }
 
     isCancelledRef.current = false;
+    setCsvReport(null);
+    setCsvFileName(null);
 
     // Reset client states to pending
     const initialStates: RouteClientProcessingState[] = route.id_clientes.map((cid) => ({
@@ -638,6 +661,18 @@ export default function BatchProcessRoutePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* CSV Route Invoice Ordering Section */}
+      <div className="space-y-6 pt-4 border-t">
+        <RouteCsvUploader
+          isLocked={!metrics.isCompleted}
+          onFileSelected={handleCsvFileSelected}
+          onReset={handleResetCsv}
+          currentFileName={csvFileName}
+        />
+
+        {csvReport && <RouteCsvValidationReport report={csvReport} />}
+      </div>
     </div>
   );
 }
