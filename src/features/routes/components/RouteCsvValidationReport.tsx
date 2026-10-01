@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import type { CsvValidationReport } from '../services/csvRouteOrderingService';
+import { useState, useEffect } from 'react';
+import type { CsvValidationReport, OrderedClientInvoices } from '../services/csvRouteOrderingService';
+import { reorderClientList, areClientOrdersEqual } from '../services/csvRouteOrderingService';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import {
   AlertTriangle,
@@ -15,6 +16,9 @@ import {
   DollarSign,
   XCircle,
   Info,
+  GripVertical,
+  RotateCcw,
+  Search,
 } from 'lucide-react';
 
 interface RouteCsvValidationReportProps {
@@ -31,13 +35,77 @@ const formatCurrency = (amount: number): string => {
 };
 
 export function RouteCsvValidationReport({ report }: RouteCsvValidationReportProps) {
+  const [orderedClients, setOrderedClients] = useState<OrderedClientInvoices[]>(report.orderedClients);
+  const [initialCsvOrder, setInitialCsvOrder] = useState<OrderedClientInvoices[]>(report.orderedClients);
+  const [isManuallyModified, setIsManuallyModified] = useState<boolean>(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedClients, setExpandedClients] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setOrderedClients(report.orderedClients);
+    setInitialCsvOrder(report.orderedClients);
+    setIsManuallyModified(false);
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+  }, [report]);
 
   const toggleExpandClient = (clientId: string) => {
     setExpandedClients((prev) => ({
       ...prev,
       [clientId]: !prev[clientId],
     }));
+  };
+
+  const isFilterActive = searchQuery.trim().length > 0;
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (isFilterActive) return;
+    e.dataTransfer.setData('text/plain', index.toString());
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (isFilterActive || draggedIndex === null) return;
+    e.dataTransfer.dropEffect = 'move';
+    if (dropTargetIndex !== index) {
+      setDropTargetIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (isFilterActive || draggedIndex === null) return;
+
+    if (draggedIndex !== dropIndex) {
+      const newOrderedList = reorderClientList(orderedClients, draggedIndex, dropIndex);
+      setOrderedClients(newOrderedList);
+
+      const modified = !areClientOrdersEqual(newOrderedList, initialCsvOrder);
+      setIsManuallyModified(modified);
+    }
+
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+  };
+
+  const handleResetOrder = () => {
+    setOrderedClients(initialCsvOrder);
+    setIsManuallyModified(false);
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
   };
 
   // BLOCKING ERROR VIEW
@@ -90,6 +158,11 @@ export function RouteCsvValidationReport({ report }: RouteCsvValidationReportPro
 
   // VALID / WARNINGS VIEW
   const hasWarnings = report.warnings.length > 0;
+  const filteredClients = isFilterActive
+    ? orderedClients.filter((client) =>
+        client.clientId.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      )
+    : orderedClients;
 
   return (
     <div className="space-y-6">
@@ -232,40 +305,114 @@ export function RouteCsvValidationReport({ report }: RouteCsvValidationReportPro
       {/* Ordered Client Invoices Table / List */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" />
               <CardTitle className="text-lg">Facturas Reordenadas por CSV</CardTitle>
             </div>
-            <span className="text-xs font-mono font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded border">
-              Orden Ascendente (1...N)
-            </span>
+            <div className="flex items-center gap-2">
+              {isManuallyModified ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    Orden modificado manualmente
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetOrder}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-background border border-input hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Restablecer orden CSV
+                  </button>
+                </>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Orden CSV ✓
+                </span>
+              )}
+            </div>
           </div>
           <CardDescription>
-            Lista de clientes y facturas ordenadas strictly según la columna{' '}
-            <code className="font-mono text-xs font-bold">orden</code> del archivo CSV.
+            Lista de clientes y facturas ordenadas según el archivo CSV subido o ajustadas manualmente mediante arrastrar y soltar.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="p-0">
-          {report.orderedClients.length === 0 ? (
+          {/* Search / Filter input bar */}
+          <div className="p-4 border-b flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-muted/20">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar cliente por ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm bg-background border rounded-md focus:outline-hidden focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            {isFilterActive && (
+              <span className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5" />
+                Reordenamiento manual deshabilitado durante búsquedas
+              </span>
+            )}
+          </div>
+
+          {filteredClients.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground space-y-2">
               <Info className="h-8 w-8 mx-auto text-muted-foreground/60" />
               <p className="text-sm font-medium">No hay facturas coincidentes para mostrar.</p>
             </div>
           ) : (
-            <div className="divide-y border-t">
-              {report.orderedClients.map((client) => {
+            <div className="divide-y">
+              {filteredClients.map((client) => {
                 const isExpanded = !!expandedClients[client.clientId];
+                const realIndex = orderedClients.findIndex((c) => c.clientId === client.clientId);
+                const isDragging = draggedIndex === realIndex;
+                const isDropTarget = dropTargetIndex === realIndex;
 
                 return (
-                  <div key={client.clientId} className="transition-colors hover:bg-muted/30">
+                  <div
+                    key={client.clientId}
+                    onDragOver={(e) => handleDragOver(e, realIndex)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, realIndex)}
+                    className={`transition-colors ${
+                      isDragging ? 'opacity-40 border-dashed border-2 border-primary bg-primary/5' : ''
+                    } ${
+                      isDropTarget && !isDragging ? 'border-t-2 border-primary bg-primary/5' : ''
+                    } hover:bg-muted/30`}
+                  >
                     <div
                       className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
                       onClick={() => toggleExpandClient(client.clientId)}
                     >
-                      {/* Left side: Orden Badge & Client ID */}
+                      {/* Left side: Grip Handle, Orden Badge & Client ID */}
                       <div className="flex items-center gap-3">
+                        <div
+                          draggable={!isFilterActive}
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            handleDragStart(e, realIndex);
+                          }}
+                          onDragEnd={handleDragEnd}
+                          onClick={(e) => e.stopPropagation()}
+                          className={`p-1 rounded-md transition-colors flex items-center justify-center ${
+                            isFilterActive
+                              ? 'opacity-30 cursor-not-allowed text-muted-foreground'
+                              : 'cursor-grab active:cursor-grabbing hover:bg-muted text-muted-foreground hover:text-foreground'
+                          }`}
+                          title={
+                            isFilterActive
+                              ? 'Reordenamiento manual deshabilitado durante búsquedas'
+                              : 'Arrastrar para reordenar'
+                          }
+                          aria-label="Arrastrar para reordenar"
+                        >
+                          <GripVertical className="h-4 w-4 shrink-0" />
+                        </div>
+
                         <span className="font-mono font-bold text-sm bg-primary/10 text-primary px-3 py-1 rounded-md border border-primary/20 shrink-0">
                           #{client.orden}
                         </span>

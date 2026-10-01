@@ -313,3 +313,45 @@ export function parseAndValidateCsv(
     grandTotalAmount,
   };
 }
+
+/**
+ * Reorders a list of clients by moving an item from sourceIndex to destinationIndex,
+ * updating the sequence position `orden` property (#1, #2, ...) for all elements.
+ */
+export function reorderClientList(
+  list: OrderedClientInvoices[],
+  sourceIndex: number,
+  destinationIndex: number
+): OrderedClientInvoices[] {
+  if (
+    sourceIndex < 0 ||
+    sourceIndex >= list.length ||
+    destinationIndex < 0 ||
+    destinationIndex >= list.length ||
+    sourceIndex === destinationIndex
+  ) {
+    return list;
+  }
+
+  const result = Array.from(list);
+  const [movedItem] = result.splice(sourceIndex, 1);
+  result.splice(destinationIndex, 0, movedItem);
+
+  // Recalculate 1-based order index
+  return result.map((client, idx) => ({
+    ...client,
+    orden: idx + 1,
+  }));
+}
+
+/**
+ * Checks if current ordered client sequence matches the original CSV order.
+ */
+export function areClientOrdersEqual(
+  current: OrderedClientInvoices[],
+  initial: OrderedClientInvoices[]
+): boolean {
+  if (current.length !== initial.length) return false;
+  return current.every((item, idx) => item.clientId === initial[idx].clientId);
+}
+

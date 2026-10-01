@@ -4,6 +4,9 @@ import {
   detectDelimiter,
   validateHeaders,
   parseAndValidateCsv,
+  reorderClientList,
+  areClientOrdersEqual,
+  type OrderedClientInvoices,
 } from './csvRouteOrderingService';
 import type { RouteClientProcessingState } from '@/app/rutas/[id]/procesar/page';
 
@@ -139,6 +142,56 @@ CLI-001;1`;
       assert.strictEqual(report.isValid, true);
       assert.ok(report.warnings.some((w) => w.code === 'ROUTE_INVOICE_NOT_IN_CSV'));
       assert.ok(report.discrepancies.routeClientsNotInCsv.includes('CLI-002'));
+    });
+  });
+
+  describe('reorderClientList', () => {
+    const mockList: OrderedClientInvoices[] = [
+      { clientId: 'CLI-001', orden: 1, invoices: [], totalAmount: 100 },
+      { clientId: 'CLI-002', orden: 2, invoices: [], totalAmount: 200 },
+      { clientId: 'CLI-003', orden: 3, invoices: [], totalAmount: 300 },
+    ];
+
+    it('moves item from source to destination and recalculates orden strictly 1..N', () => {
+      // Move CLI-003 (index 2) to top (index 0)
+      const result = reorderClientList(mockList, 2, 0);
+      assert.strictEqual(result.length, 3);
+      assert.strictEqual(result[0].clientId, 'CLI-003');
+      assert.strictEqual(result[0].orden, 1);
+      assert.strictEqual(result[1].clientId, 'CLI-001');
+      assert.strictEqual(result[1].orden, 2);
+      assert.strictEqual(result[2].clientId, 'CLI-002');
+      assert.strictEqual(result[2].orden, 3);
+    });
+
+    it('returns original list unchanged when indices are identical or invalid', () => {
+      assert.strictEqual(reorderClientList(mockList, 1, 1), mockList);
+      assert.strictEqual(reorderClientList(mockList, -1, 2), mockList);
+      assert.strictEqual(reorderClientList(mockList, 0, 5), mockList);
+    });
+  });
+
+  describe('areClientOrdersEqual', () => {
+    const listA: OrderedClientInvoices[] = [
+      { clientId: 'CLI-001', orden: 1, invoices: [], totalAmount: 100 },
+      { clientId: 'CLI-002', orden: 2, invoices: [], totalAmount: 200 },
+    ];
+    const listB: OrderedClientInvoices[] = [
+      { clientId: 'CLI-001', orden: 1, invoices: [], totalAmount: 100 },
+      { clientId: 'CLI-002', orden: 2, invoices: [], totalAmount: 200 },
+    ];
+    const listC: OrderedClientInvoices[] = [
+      { clientId: 'CLI-002', orden: 1, invoices: [], totalAmount: 200 },
+      { clientId: 'CLI-001', orden: 2, invoices: [], totalAmount: 100 },
+    ];
+
+    it('returns true for matching client ID sequences', () => {
+      assert.strictEqual(areClientOrdersEqual(listA, listB), true);
+    });
+
+    it('returns false for different client ID sequences or lengths', () => {
+      assert.strictEqual(areClientOrdersEqual(listA, listC), false);
+      assert.strictEqual(areClientOrdersEqual(listA, listA.slice(0, 1)), false);
     });
   });
 });
