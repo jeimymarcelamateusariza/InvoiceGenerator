@@ -11,16 +11,16 @@ export default async function InvoicesPage(props: {
   const search = searchParams.search || '';
   const status = searchParams.status || '';
   const notificationCount = searchParams.notification_count || '';
-  
+
   const response = await invoiceService.getInvoices(page, 10, search, status, notificationCount);
   const invoices = response.data || [];
   const meta = response.meta || { total: 0, last_page: 1, current_page: 1 };
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <InvoiceFilters />
-      
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+
+      <div className="p-4 md:p-6 bg-muted dark:bg-muted/50 rounded-lg">
+        <InvoiceFilters />
         <Table>
           <TableHeader>
             <TableRow className="bg-[#7c3aed] hover:bg-[#7c3aed] border-b-0">
@@ -41,7 +41,7 @@ export default async function InvoicesPage(props: {
             {invoices.map((invoice: any) => {
               const customerName = invoice.customer?.company_name || `${invoice.customer?.first_name || ''} ${invoice.customer?.last_name || ''}`.trim();
               const waCount = invoice.wa_notifications_count || invoice.wa_notifications || 0;
-              
+
               return (
                 <TableRow key={invoice.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <TableCell>
@@ -86,19 +86,19 @@ export default async function InvoicesPage(props: {
         </div>
         <div className="flex items-center gap-2">
           {page > 1 ? (
-            <Link href={`?page=${page - 1}${search ? '&search='+search : ''}${status ? '&status='+status : ''}`} className="hover:text-gray-900">
+            <Link href={`?page=${page - 1}${search ? '&search=' + search : ''}${status ? '&status=' + status : ''}`} className="hover:text-gray-900">
               &lt; Anterior
             </Link>
           ) : (
             <span className="text-gray-300">&lt; Anterior</span>
           )}
-          
+
           <span className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-900">
             {page}
           </span>
-          
+
           {page < meta.last_page ? (
-            <Link href={`?page=${page + 1}${search ? '&search='+search : ''}${status ? '&status='+status : ''}`} className="hover:text-gray-900">
+            <Link href={`?page=${page + 1}${search ? '&search=' + search : ''}${status ? '&status=' + status : ''}`} className="hover:text-gray-900">
               Siguiente &gt;
             </Link>
           ) : (

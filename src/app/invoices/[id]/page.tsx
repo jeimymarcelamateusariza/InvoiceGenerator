@@ -28,8 +28,8 @@ export default async function InvoiceDetailPage(props: {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 print:block">
-        {/* LEFT COLUMN (33%) */}
-        <div className="w-full lg:w-1/3 flex flex-col gap-6 print:hidden">
+        {/* LEFT COLUMN (45%) */}
+        <div className="w-full lg:w-[45%] flex flex-col gap-6 print:hidden">
           {/* Invoice Summary Card */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="bg-[#7c3aed] p-1 h-2"></div>
@@ -53,43 +53,49 @@ export default async function InvoiceDetailPage(props: {
               </div>
 
               {/* Grid Info */}
-              <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 text-sm">
                 <div>
                   <h3 className="text-gray-400 font-semibold mb-3 uppercase text-xs">Facturado A</h3>
                   <p className="font-bold text-gray-900 text-base">{customerName}</p>
                   <p className="text-gray-500 mt-1 flex items-center gap-2">
-                    <User className="w-4 h-4 opacity-70" />
-                    CC: {customer.document_number}
+                    <User className="w-4 h-4 opacity-70 shrink-0" />
+                    <span>CC: {customer.document_number}</span>
                   </p>
                   <p className="text-gray-500 mt-1 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 opacity-70" />
-                    {customer.address}
+                    <MapPin className="w-4 h-4 opacity-70 shrink-0" />
+                    <span>{customer.address}</span>
                   </p>
                   {customer.email && (
                     <p className="text-gray-500 mt-1 flex items-center gap-2">
-                      <Mail className="w-4 h-4 opacity-70" />
-                      {customer.email}
+                      <Mail className="w-4 h-4 opacity-70 shrink-0" />
+                      <span>{customer.email}</span>
                     </p>
                   )}
                   {customer.mobile && (
                     <p className="text-gray-500 mt-1 flex items-center gap-2">
-                      <Phone className="w-4 h-4 opacity-70" />
-                      {customer.mobile}
+                      <Phone className="w-4 h-4 opacity-70 shrink-0" />
+                      <span>{customer.mobile}</span>
                     </p>
                   )}
                 </div>
-                <div>
-                  <h3 className="text-gray-400 font-semibold mb-3 uppercase text-xs text-right">Detalles</h3>
+                <div className="flex flex-col sm:items-end">
+                  <h3 className="text-gray-400 font-semibold mb-3 uppercase text-xs sm:text-right w-full">Detalles</h3>
                   <div className="space-y-2 text-right">
-                    <p className="flex justify-end gap-2 text-gray-500">
-                      <Calendar className="w-4 h-4 opacity-70" /> <span className="w-24 text-left">Emisión:</span> <span className="font-medium text-gray-900">{invoice.issue_date}</span>
-                    </p>
-                    <p className="flex justify-end gap-2 text-gray-500">
-                      <Calendar className="w-4 h-4 opacity-70" /> <span className="w-24 text-left">Vencimiento:</span> <span className="font-medium text-gray-900">{invoice.due_date}</span>
-                    </p>
-                    <p className="flex justify-end gap-2 text-gray-500">
-                      <Calendar className="w-4 h-4 opacity-70" /> <span className="w-24 text-left">Período:</span> <span className="font-medium text-gray-900 block truncate w-24 text-right" title={`${invoice.period_start} - ${invoice.period_end}`}>{invoice.period_start} - {invoice.period_end}</span>
-                    </p>
+                    <div className="flex items-center justify-end gap-2 text-gray-500">
+                      <Calendar className="w-4 h-4 opacity-70 shrink-0" />
+                      <span className="shrink-0">Emisión:</span>
+                      <span className="font-medium text-gray-900 whitespace-nowrap">{invoice.issue_date}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 text-gray-500">
+                      <Calendar className="w-4 h-4 opacity-70 shrink-0" />
+                      <span className="shrink-0">Vencimiento:</span>
+                      <span className="font-medium text-gray-900 whitespace-nowrap">{invoice.due_date}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 text-gray-500">
+                      <Calendar className="w-4 h-4 opacity-70 shrink-0" />
+                      <span className="shrink-0">Período:</span>
+                      <span className="font-medium text-gray-900 whitespace-nowrap" title={`${invoice.period_start} - ${invoice.period_end}`}>{invoice.period_start} - {invoice.period_end}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -118,11 +124,11 @@ export default async function InvoiceDetailPage(props: {
               <div className="flex flex-col items-end gap-2 text-sm">
                 <div className="flex justify-between w-48 text-gray-500">
                   <span>Subtotal</span>
-                  <span>${Number(invoice.subtotal).toLocaleString()}</span>
+                  <span>${Number(invoice.subtotal || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between w-48 text-gray-500">
                   <span>Impuestos</span>
-                  <span>${Number(invoice.tax_total).toLocaleString()}</span>
+                  <span>${Number(invoice.tax_total || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between w-48 font-bold text-lg mt-2 pt-2 border-t border-gray-100">
                   <span className="text-gray-400">TOTAL</span>
@@ -134,8 +140,8 @@ export default async function InvoiceDetailPage(props: {
           </div>
         </div>
 
-        {/* RIGHT COLUMN (66%) */}
-        <div className="w-full lg:w-2/3 flex flex-col print:w-full print:block">
+        {/* RIGHT COLUMN (55%) */}
+        <div className="w-full lg:w-[55%] flex flex-col print:w-full print:block">
           <div className="flex items-center gap-2 mb-2 text-gray-800 font-bold text-lg print:hidden">
             <FileText className="w-5 h-5 text-[#7c3aed]" />
             Documento PDF Generado

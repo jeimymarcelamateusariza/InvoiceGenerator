@@ -1,8 +1,8 @@
 project: InvoiceGenerator
 mode: openspec
 strict_tdd: false
-context: "Invoice previewing app. Built with Next.js, React, TypeScript, and Tailwind CSS."
+context: "Invoice generator and previewing application built with Next.js 15, React 19, TypeScript, Tailwind CSS v4, and better-sqlite3."
 testing:
   runner: none
   frameworks: []
-  capabilities: "No test runner configured in package.json."
+  capabilities: "Jest test files exist in src/ but no test runner or npm script is configured in package.json."

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardHeader,
@@ -23,6 +25,7 @@ import {
   AlertCircle,
   Eye,
   UserCheck,
+  Play,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,6 +44,7 @@ interface RutaDetail {
 }
 
 export default function RutasPage() {
+  const router = useRouter();
   const [rutas, setRutas] = useState<RutaItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -272,31 +276,35 @@ export default function RutasPage() {
           {rutas.map((ruta) => (
             <Card key={ruta.id} className="flex flex-col justify-between h-full shadow-sm hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-lg font-bold truncate pr-2">{ruta.nombre}</CardTitle>
+                <Link href={`/rutas/${ruta.id}`} className="hover:underline flex-1 min-w-0">
+                  <CardTitle className="text-lg font-bold truncate pr-2 text-primary hover:text-primary/80 transition-colors">{ruta.nombre}</CardTitle>
+                </Link>
                 <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                   <MapPin className="h-5 w-5 text-primary" />
                 </div>
               </CardHeader>
 
               <CardContent className="pt-4 flex-grow">
-                <div className="flex items-center gap-2 text-base font-medium text-foreground">
-                  <Users className="h-5 w-5 text-muted-foreground" />
-                  <span>{ruta.total_clientes} Clientes asignados</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-3">
-                  Creada el: {new Date(ruta.created_at).toLocaleDateString()}
-                </p>
+                <Link href={`/rutas/${ruta.id}`} className="block group">
+                  <div className="flex items-center gap-2 text-base font-medium text-foreground group-hover:text-primary transition-colors">
+                    <Users className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span>{ruta.total_clientes} Clientes asignados</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Creada el: {new Date(ruta.created_at).toLocaleDateString()}
+                  </p>
+                </Link>
               </CardContent>
 
               <CardFooter className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t">
                 <Button
-                  variant="secondary"
+                  variant="default"
                   size="sm"
-                  onClick={() => handleViewClients(ruta.id, ruta.nombre)}
+                  onClick={() => router.push(`/rutas/${ruta.id}`)}
                   className="flex items-center gap-1.5"
                 >
                   <Eye className="h-3.5 w-3.5" />
-                  Ver clientes
+                  Ver detalle
                 </Button>
                 <Button
                   variant="outline"
@@ -394,7 +402,16 @@ export default function RutasPage() {
             </div>
 
             {/* Footer del Modal */}
-            <div className="flex items-center justify-end px-6 py-4 border-t bg-muted/20">
+            <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/20">
+              {viewRouteData && (
+                <Button
+                  onClick={() => router.push(`/rutas/${viewRouteData.id}/procesar`)}
+                  className="flex items-center gap-2"
+                >
+                  <Play className="h-4 w-4 fill-current" />
+                  Procesar Facturas
+                </Button>
+              )}
               <Button variant="outline" onClick={handleCloseViewModal}>
                 Cerrar
               </Button>

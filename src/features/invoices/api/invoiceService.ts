@@ -1,4 +1,4 @@
-import type { InvoiceFromApi, InvoicePayload, PaymentPayload, InvoicesResponse, InvoiceProviderLink } from '../types';
+import type { InvoiceFromApi, InvoicePayload, PaymentPayload, InvoicesResponse, InvoiceProviderLink, ClientInvoicesResult } from '../types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const TENANT_DOMAIN = process.env.NEXT_PUBLIC_TENANT_DOMAIN || '';
@@ -60,6 +60,43 @@ export const invoiceService = {
     if (notificationCount !== undefined && notificationCount !== "") params.append("filter[notification_count]", notificationCount);
     
     return await fetchApi<InvoicesResponse>(`/api/v1/invoices?${params.toString()}`);
+  },
+
+  getInvoicesByClientId: async (
+    clientId: string,
+    options?: { status?: string; page?: number; perPage?: number }
+  ): Promise<ClientInvoicesResult> => {
+    const statusFilter = options?.status ?? 'ISSUED';
+    const page = options?.page ?? 1;
+    const perPage = options?.perPage ?? 100;
+    try {
+      const params = new URLSearchParams();
+      const trimmedId = clientId.trim();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmedId);
+      if (isUuid) {
+        params.append('filter[customer_id]', trimmedId);
+      } else {
+        params.append('filter[search]', trimmedId);
+      }
+      if (statusFilter) params.append('filter[status]', statusFilter);
+      params.append('page', page.toString());
+      params.append('per_page', perPage.toString());
+
+      const response = await fetchApi<InvoicesResponse>(`/api/v1/invoices?${params.toString()}`);
+      const invoices = response.data || [];
+      if (invoices.length === 0) {
+        return { status: 'empty', clientId, invoices: [], count: 0 };
+      }
+      return { status: 'success', clientId, invoices, count: invoices.length };
+    } catch (err: unknown) {
+      return {
+        status: 'error',
+        clientId,
+        invoices: [],
+        count: 0,
+        error: { message: err instanceof Error ? err.message : 'Error querying client invoices' }
+      };
+    }
   },
 
   getInvoiceById: async (id: string): Promise<InvoiceFromApi> => {
@@ -129,3 +166,4 @@ export const invoiceService = {
     return await response.blob();
   }
 };
+
