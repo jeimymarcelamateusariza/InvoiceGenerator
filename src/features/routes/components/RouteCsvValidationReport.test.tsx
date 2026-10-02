@@ -1,5 +1,4 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
+import { describe, it, expect, assert } from 'vitest';
 import type { CsvValidationReport, OrderedClientInvoices } from '../services/csvRouteOrderingService';
 import { reorderClientList, areClientOrdersEqual } from '../services/csvRouteOrderingService';
 

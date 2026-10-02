@@ -1,29 +1,28 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, beforeEach, it, expect, vi } from "vitest";
 import { LoginForm } from "./LoginForm";
 import { PermissionsProvider } from "@/context/PermissionsContext";
 import { authService } from "@/services/auth.service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-jest.mock("@/services/auth.service");
-jest.mock("sonner");
-jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(),
+vi.mock("@/services/auth.service");
+vi.mock("sonner");
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(),
 }));
 
 describe("LoginForm", () => {
-  const mockRouterPush = jest.fn();
+  const mockRouterPush = vi.fn();
 
   beforeEach(() => {
-    (useRouter as jest.Mock).mockReturnValue({ push: mockRouterPush });
-    (authService.login as jest.Mock).mockClear();
-    (toast.success as jest.Mock).mockClear();
-    (toast.error as jest.Mock).mockClear();
+    vi.mocked(useRouter).mockReturnValue({ push: mockRouterPush } as any);
+    vi.clearAllMocks();
   });
 
   it("submits the form successfully and redirects", async () => {
-    (authService.login as jest.Mock).mockResolvedValue({
+    vi.mocked(authService.login).mockResolvedValue({
       token: "fake-token",
       user: { id: "1", email: "test@example.com", permissions: [] },
     });
@@ -34,21 +33,21 @@ describe("LoginForm", () => {
       </PermissionsProvider>
     );
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
+    fireEvent.change(screen.getByLabelText(/correo/i), { target: { value: "test@example.com" } });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: "password123" } });
     
-    fireEvent.submit(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.submit(screen.getByRole("button", { name: /ingresar/i }));
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalledWith({ email: "test@example.com", password: "password123" });
     });
     
-    expect(toast.success).toHaveBeenCalledWith("Login successful");
+    expect(toast.success).toHaveBeenCalledWith("Inicio de sesión exitoso");
     expect(mockRouterPush).toHaveBeenCalledWith("/");
   });
 
   it("shows error on failed login", async () => {
-    (authService.login as jest.Mock).mockRejectedValue(new Error("Invalid credentials"));
+    vi.mocked(authService.login).mockRejectedValue(new Error("Invalid credentials"));
 
     render(
       <PermissionsProvider>
@@ -56,10 +55,10 @@ describe("LoginForm", () => {
       </PermissionsProvider>
     );
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "wrong" } });
+    fireEvent.change(screen.getByLabelText(/correo/i), { target: { value: "test@example.com" } });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: "wrong" } });
     
-    fireEvent.submit(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.submit(screen.getByRole("button", { name: /ingresar/i }));
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalled();
@@ -68,3 +67,4 @@ describe("LoginForm", () => {
     expect(toast.error).toHaveBeenCalledWith("Invalid credentials");
   });
 });
+

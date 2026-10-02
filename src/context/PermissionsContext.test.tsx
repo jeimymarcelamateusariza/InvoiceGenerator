@@ -1,9 +1,10 @@
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
+import { describe, beforeEach, it, expect, vi } from "vitest";
 import { PermissionsProvider, usePermissions } from "./PermissionsContext";
 import Cookies from "js-cookie";
 
-jest.mock("js-cookie");
+vi.mock("js-cookie");
 
 const TestComponent = () => {
   const { user, setUser, isAuthenticated, hasPermission, logout } = usePermissions();
@@ -22,9 +23,7 @@ const TestComponent = () => {
 
 describe("PermissionsContext", () => {
   beforeEach(() => {
-    (Cookies.get as jest.Mock).mockClear();
-    (Cookies.set as jest.Mock).mockClear();
-    (Cookies.remove as jest.Mock).mockClear();
+    vi.clearAllMocks();
   });
 
   it("provides authentication state and handles login/logout", () => {
@@ -52,3 +51,4 @@ describe("PermissionsContext", () => {
     expect(Cookies.remove).toHaveBeenCalled();
   });
 });
+

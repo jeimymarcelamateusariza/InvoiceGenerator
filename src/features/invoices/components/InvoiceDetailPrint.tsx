@@ -18,7 +18,6 @@ export function InvoiceDetailPrint({ invoice }: { invoice: InvoiceFromApi }) {
       <style dangerouslySetInnerHTML={{
         __html: `
         @media print {
-          @page { size: 8.5in 5.5in; margin: 5mm; }
           html, body { width: 100% !important; margin: 0 !important; padding: 0 !important; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           .no-print { display: none !important; }
           .print-border { border-color: black !important; }
@@ -99,7 +98,7 @@ export function InvoiceDetailPrint({ invoice }: { invoice: InvoiceFromApi }) {
           </thead>
           <tbody>
             {items.map((item: any, index: number) => (
-              <tr key={index} className="border-b border-black print-border h-16 align-top">
+              <tr key={index} className="border-b border-black print-border min-h-[32px] align-top">
                 <td className="py-1 px-2 border-r border-black print-border break-words">{item.description}</td>
                 <td className="py-1 px-2 text-center border-r border-black print-border">{Number(item.quantity)}</td>
                 <td className="py-1 px-2 text-right border-r border-black print-border">{Number(item.unit_price).toLocaleString()}</td>

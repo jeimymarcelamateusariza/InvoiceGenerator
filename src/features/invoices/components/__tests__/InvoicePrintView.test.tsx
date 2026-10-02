@@ -44,21 +44,21 @@ describe('InvoicePrintView Component', () => {
     render(<InvoicePrintView invoice={mockInvoice} />);
 
     // Customer and Issuer checks
-    expect(screen.getByText('Empresa Test')).toBeInDOM ? expect(screen.getByText('Empresa Test')).toBeDefined() : null;
-    expect(screen.getByText(/SERVICOMPUTEL/i || /Empresa/i)).toBeDefined();
-    expect(screen.getByText('Servicio de Internet 100M')).toBeDefined();
+    expect(screen.getByText('Empresa Test')).toBeTruthy();
+    expect(screen.getByText(/SERVICOMPUTEL/i)).toBeTruthy();
+    expect(screen.getByText('Servicio de Internet 100M')).toBeTruthy();
 
     // Check payment total amount representation
-    expect(screen.getByText('119,000')).toBeDefined();
+    expect(screen.getByText('119.000')).toBeTruthy();
   });
 
   it('enforces Half-Letter layout CSS classes container', () => {
     render(<InvoicePrintView invoice={mockInvoice} />);
     const container = screen.getByTestId('invoice-print-view');
-    expect(container).toBeDefined();
+    expect(container).toBeTruthy();
     expect(container.className).toContain('half-letter-page');
-    expect(container.className).toContain('w-[5.5in]');
-    expect(container.className).toContain('min-h-[8.5in]');
+    expect(container.className).toContain('max-w-[8.5in]');
+    expect(container.className).toContain('min-h-[5.5in]');
   });
 
   it('omits direct single-invoice print button in preview view', () => {

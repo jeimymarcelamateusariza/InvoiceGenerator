@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, AlertCircle, Loader2, FileText } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw, AlertCircle, Loader2, FileText, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { invoiceService } from '@/features/invoices/api/invoiceService';
 import type { InvoiceFromApi } from '@/features/invoices/types';
 import { InvoicePrintView } from '@/features/invoices/components/InvoicePrintView';
+import { InvoiceBatchPrintContainer } from './InvoiceBatchPrintContainer';
 
 export interface InvoiceRoutePreviewViewProps {
   routeId: string;
@@ -26,6 +27,7 @@ export function InvoiceRoutePreviewView({
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [manifestLoading, setManifestLoading] = useState<boolean>(!initialInvoiceIds || initialInvoiceIds.length === 0);
+  const [showBatchPrint, setShowBatchPrint] = useState<boolean>(false);
 
   // Ref to prevent duplicate in-flight fetches for the same ID
   const fetchingRef = useRef<Set<string>>(new Set());
@@ -201,6 +203,17 @@ export function InvoiceRoutePreviewView({
 
   const activeInvoice = activeInvoiceId ? cache[activeInvoiceId] || null : null;
 
+  if (showBatchPrint) {
+    return (
+      <InvoiceBatchPrintContainer
+        routeId={routeId}
+        initialInvoiceIds={invoiceIds}
+        initialCache={cache}
+        onClose={() => setShowBatchPrint(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 pb-12">
       {/* Top Fixed / Sticky Toolbar */}
@@ -223,8 +236,8 @@ export function InvoiceRoutePreviewView({
             </span>
           </div>
 
-          {/* Center / Right: Navigation Controls & Status Counter */}
-          <div className="flex items-center gap-3">
+          {/* Center / Right: Navigation Controls, Counter & Batch Print Trigger */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
               size="sm"
@@ -263,6 +276,18 @@ export function InvoiceRoutePreviewView({
             >
               <span className="hidden xs:inline">Siguiente</span>
               <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            {/* Imprimir Lote / Documento PDF */}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowBatchPrint(true)}
+              disabled={manifestLoading || totalInvoices === 0}
+              className="flex items-center gap-1.5 cursor-pointer ml-1"
+            >
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Imprimir Lote</span>
             </Button>
           </div>
         </div>
