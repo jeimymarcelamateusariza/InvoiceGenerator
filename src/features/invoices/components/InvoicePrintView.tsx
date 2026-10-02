@@ -19,7 +19,7 @@ export function InvoicePrintView({ invoice, className = '' }: InvoicePrintViewPr
           __html: `
           @media print {
             @page {
-              size: 8.5in 5.5in;
+              size: letter portrait;
               margin: 5mm;
             }
             body {

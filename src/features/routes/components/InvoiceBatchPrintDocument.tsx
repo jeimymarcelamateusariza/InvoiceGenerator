@@ -15,7 +15,7 @@ export function InvoiceBatchPrintDocument({ invoices }: InvoiceBatchPrintDocumen
         __html: `
           @media print {
             @page {
-              size: 8.5in 5.5in;
+              size: letter portrait;
               margin: 0 !important;
             }
             html, body {
@@ -43,8 +43,8 @@ export function InvoiceBatchPrintDocument({ invoices }: InvoiceBatchPrintDocumen
               float: none !important;
               position: relative !important;
               width: 8.5in !important;
-              height: 5.5in !important;
-              max-height: 5.5in !important;
+              height: 11in !important;
+              max-height: 11in !important;
               padding: 5mm !important;
               box-sizing: border-box !important;
               overflow: hidden !important;
