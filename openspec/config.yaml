@@ -5,4 +5,4 @@ context: "Invoice generator and previewing application built with Next.js 15, Re
 testing:
   runner: none
   frameworks: []
-  capabilities: "Jest test files exist in src/ but no test runner or npm script is configured in package.json."
+  capabilities: "Jest/React Testing Library syntax test files exist in src/ (5 test files found), but no test runner or test script is configured in package.json."

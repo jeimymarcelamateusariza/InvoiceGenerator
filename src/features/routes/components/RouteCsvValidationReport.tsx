@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import type { CsvValidationReport, OrderedClientInvoices } from '../services/csvRouteOrderingService';
 import { reorderClientList, areClientOrdersEqual } from '../services/csvRouteOrderingService';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -19,10 +21,12 @@ import {
   GripVertical,
   RotateCcw,
   Search,
+  Eye,
 } from 'lucide-react';
 
 interface RouteCsvValidationReportProps {
   report: CsvValidationReport;
+  routeId?: string;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -34,7 +38,11 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-export function RouteCsvValidationReport({ report }: RouteCsvValidationReportProps) {
+export function RouteCsvValidationReport({ report, routeId: propRouteId }: RouteCsvValidationReportProps) {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const activeRouteId = propRouteId || params?.id || '';
+
   const [orderedClients, setOrderedClients] = useState<OrderedClientInvoices[]>(report.orderedClients);
   const [initialCsvOrder, setInitialCsvOrder] = useState<OrderedClientInvoices[]>(report.orderedClients);
   const [isManuallyModified, setIsManuallyModified] = useState<boolean>(false);
@@ -42,6 +50,14 @@ export function RouteCsvValidationReport({ report }: RouteCsvValidationReportPro
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedClients, setExpandedClients] = useState<Record<string, boolean>>({});
+
+  const handleOpenPreview = () => {
+    const orderedInvoiceIds = orderedClients.flatMap((client) => client.invoices.map((inv) => inv.id));
+    if (activeRouteId && typeof window !== 'undefined') {
+      sessionStorage.setItem(`route_preview_${activeRouteId}`, JSON.stringify(orderedInvoiceIds));
+      router.push(`/rutas/${activeRouteId}/preview`);
+    }
+  };
 
   useEffect(() => {
     setOrderedClients(report.orderedClients);
@@ -188,15 +204,26 @@ export function RouteCsvValidationReport({ report }: RouteCsvValidationReportPro
               </div>
             </div>
 
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
-                hasWarnings
-                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-              }`}
-            >
-              {hasWarnings ? 'Con Advertencias' : 'Ordenamiento Aplicado'}
-            </span>
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <Button
+                type="button"
+                onClick={handleOpenPreview}
+                className="inline-flex items-center gap-2 font-semibold shadow-xs cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Eye className="h-4 w-4" />
+                Vista previa de facturas
+              </Button>
+
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
+                  hasWarnings
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                }`}
+              >
+                {hasWarnings ? 'Con Advertencias' : 'Ordenamiento Aplicado'}
+              </span>
+            </div>
           </div>
         </CardHeader>
 

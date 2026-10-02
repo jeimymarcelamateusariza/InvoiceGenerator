@@ -1,45 +1,15 @@
-# Capability Specification: `invoice-printing`
+# Capability Specification: invoice-printing
 
-## Purpose
+## 1. Requirement: Half-Letter Dimension Format for Invoice Print View Layout
 
-Previewing and generating PDF invoices in a specific half-letter ("Media carta") format.
-
-## Requirements
-
-### Requirement: Invoice Previewing
-
-The system MUST display a detailed view of a specific invoice.
-
-#### Scenario: Previewing an existing invoice
-
-- GIVEN the user is authenticated
-- WHEN they select an invoice to view details
-- THEN the system MUST display the invoice details including fixed company data
-
-### Requirement: Invoice Printing
-
-The system MUST generate a "Media carta" PDF layout without CUFE and provide print functionality.
-
-#### Scenario: Generating PDF for printing
-
-- GIVEN the user is viewing an invoice detail
-- WHEN they trigger the print action
-- THEN the system MUST generate a "Media carta" PDF blob
-- AND open the PDF in a new tab for printing
-- AND the PDF MUST NOT include the CUFE
-
----
-
-## 3. Requirement: Half-Letter Dimension Format for Invoice Print View Layout
-
-### 3.1 Specification
+### 1.1 Specification
 The `InvoicePrintView` component layout MUST be formatted specifically for Half-Letter dimensions (`5.5 in x 8.5 in` / `140 mm x 216 mm`) in portrait orientation, serving as a single-page per invoice representation.
 - The invoice container dimensions MUST strictly adhere to half-letter aspect ratio constraints (`5.5in` width by `8.5in` height / `140mm` width by `216mm` height).
 - The print layout CSS MUST specify `@page { size: 5.5in 8.5in; margin: 5mm; }` (or equivalent CSS print page setup).
 - The visual layout MUST compactly fit the company header, issuer details, client metadata, line item table, and summary totals (subtotal, taxes, total amount due) onto a single half-letter page without vertical content overflow or unwanted page breaks.
 - Direct single-invoice print buttons or print triggers MUST be omitted in preview mode, maintaining batch structure readiness for downstream PDF rendering.
 
-### 3.2 Scenarios
+### 1.2 Scenarios
 
 #### Scenario: Rendering invoice layout in half-letter format
 - **Given** a valid invoice record with header metadata, client info, and item list

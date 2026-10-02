@@ -4,6 +4,7 @@
 - **Existing Test Files**:
   - `src/components/auth/LoginForm.test.tsx`
   - `src/context/PermissionsContext.test.tsx`
+  - `src/features/routes/components/RouteCsvValidationReport.test.tsx`
   - `src/features/routes/services/csvRouteOrderingService.test.ts`
   - `src/services/auth.service.test.ts`
 - **Linter**: ESLint (`npm run lint` / `next lint`).
