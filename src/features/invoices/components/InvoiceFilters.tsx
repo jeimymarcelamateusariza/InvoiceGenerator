@@ -3,6 +3,8 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem } from '@/components/ui/combobox';
 
 export function InvoiceFilters() {
   const router = useRouter();
@@ -31,23 +33,25 @@ export function InvoiceFilters() {
     }
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    router.push(pathname + '?' + createQueryString('status', e.target.value));
+  const handleStatusChange = (value: string | string[] | null) => {
+    const val = Array.isArray(value) ? value[0] : value;
+    router.push(pathname + '?' + createQueryString('status', val || ''));
   };
 
-  const handleWaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    router.push(pathname + '?' + createQueryString('notification_count', e.target.value));
+  const handleWaChange = (value: string | string[] | null) => {
+    const val = Array.isArray(value) ? value[0] : value;
+    router.push(pathname + '?' + createQueryString('notification_count', val || ''));
   };
 
   return (
     <div className="flex gap-4 mb-6">
-      <div className="relative flex-1 max-w-xs bg-white rounded-md border border-gray-300">
+      <div className="relative flex-1 max-w-xs">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-gray-400" />
+          <Search className="h-4 w-4 text-muted-foreground" />
         </div>
-        <input
+        <Input
           type="text"
-          className="block w-full pl-10 pr-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-purple-500 sm:text-sm"
+          className="pl-10 bg-white"
           placeholder="Buscar por cliente..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -56,27 +60,61 @@ export function InvoiceFilters() {
         />
       </div>
 
-      <select
-        className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md border bg-white"
-        onChange={handleStatusChange}
-        defaultValue={searchParams.get('status') || ''}
-      >
-        <option value="">Estado</option>
-        <option value="Emitida">Emitida</option>
-        <option value="Pagada">Pagada</option>
-        <option value="Vencida">Vencida</option>
-      </select>
+      <div className="w-48">
+        <Combobox
+          value={searchParams.get('status') || ''}
+          onValueChange={handleStatusChange}
+          itemToStringLabel={(itemValue) => {
+            const labels: Record<string, string> = {
+              '': 'Todos los estados',
+              'DRAFT': 'Borrador',
+              'ISSUED': 'Emitida',
+              'PARTIALLY_PAID': 'Pagada Parcialmente',
+              'PAID': 'Pagada',
+              'CANCELED': 'Cancelada'
+            };
+            return labels[itemValue as string] || itemValue as string;
+          }}
+        >
+          <ComboboxInput placeholder="Estado" />
+          <ComboboxContent>
+            <ComboboxList>
+              <ComboboxItem value="" label="Todos los estados">Todos los estados</ComboboxItem>
+              <ComboboxItem value="DRAFT" label="Borrador">Borrador</ComboboxItem>
+              <ComboboxItem value="ISSUED" label="Emitida">Emitida</ComboboxItem>
+              <ComboboxItem value="PARTIALLY_PAID" label="Pagada Parcialmente">Pagada Parcialmente</ComboboxItem>
+              <ComboboxItem value="PAID" label="Pagada">Pagada</ComboboxItem>
+              <ComboboxItem value="CANCELED" label="Cancelada">Cancelada</ComboboxItem>
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+      </div>
 
-      <select
-        className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md border bg-white"
-        onChange={handleWaChange}
-        defaultValue={searchParams.get('notification_count') || ''}
-      >
-        <option value="">Notificaciones WA</option>
-        <option value="0">0 notificaciones</option>
-        <option value="1">1 notificación</option>
-        <option value="2">2+ notificaciones</option>
-      </select>
+      <div className="w-48">
+        <Combobox
+          value={searchParams.get('notification_count') || ''}
+          onValueChange={handleWaChange}
+          itemToStringLabel={(itemValue) => {
+            const labels: Record<string, string> = {
+              '': 'Notificaciones WA',
+              '0': '0 notificaciones',
+              '1': '1 notificación',
+              '2': '2+ notificaciones'
+            };
+            return labels[itemValue as string] || itemValue as string;
+          }}
+        >
+          <ComboboxInput placeholder="Notificaciones WA" />
+          <ComboboxContent>
+            <ComboboxList>
+              <ComboboxItem value="" label="Notificaciones WA">Notificaciones WA</ComboboxItem>
+              <ComboboxItem value="0" label="0 notificaciones">0 notificaciones</ComboboxItem>
+              <ComboboxItem value="1" label="1 notificación">1 notificación</ComboboxItem>
+              <ComboboxItem value="2" label="2+ notificaciones">2+ notificaciones</ComboboxItem>
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+      </div>
     </div>
   );
 }

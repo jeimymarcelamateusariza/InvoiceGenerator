@@ -17,7 +17,7 @@ export default async function InvoiceDetailPage(props: {
     <div className="min-h-screen bg-gray-50 p-6 print:p-0 print:bg-white">
       {/* Breadcrumb / Top */}
       <div className="text-sm text-gray-500 mb-6 flex items-center gap-2 print:hidden">
-        <Link href="/invoices" className="hover:text-purple-600">Facturas</Link>
+        <Link href="/invoices" className="hover:text-primary">Facturas</Link>
         <span>&gt;</span>
         <span className="text-gray-900 font-medium">Ver factura</span>
       </div>
@@ -28,26 +28,26 @@ export default async function InvoiceDetailPage(props: {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 print:block">
-        {/* LEFT COLUMN (45%) */}
-        <div className="w-full lg:w-[45%] flex flex-col gap-6 print:hidden">
+        {/* LEFT COLUMN (38%) */}
+        <div className="w-full lg:w-[38%] flex flex-col gap-6 print:hidden">
           {/* Invoice Summary Card */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="bg-[#7c3aed] p-1 h-2"></div>
+            <div className="bg-primary p-1 h-2"></div>
             <div className="p-6">
               {/* Card Header */}
               <div className="flex justify-between items-start mb-8">
                 <div className="flex gap-4 items-center">
-                  <div className="bg-[#7c3aed] text-white px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider">
+                  <div className="bg-primary text-white px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider">
                     {issuerName}
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-gray-900">FACTURA</h2>
                     <p className="text-gray-500 font-mono">#{invoice.id.split('-')[0].toUpperCase()}</p>
-                    <p className="text-[#7c3aed] text-sm mt-1">{issuerName}</p>
+                    <p className="text-primary text-sm mt-1">{issuerName}</p>
                     <p className="text-gray-400 text-xs">NIT: {issuer.nit}</p>
                   </div>
                 </div>
-                <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold uppercase">
+                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold uppercase">
                   {invoice.status || 'ISSUED'}
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default async function InvoiceDetailPage(props: {
 
               {/* Items Table */}
               <div className="mb-6">
-                <div className="bg-[#7c3aed] text-white text-xs font-bold uppercase rounded-t-md flex py-2 px-3">
+                <div className="bg-primary text-white text-xs font-bold uppercase rounded-t-md flex py-2 px-3">
                   <div className="w-[45%]">Descripción</div>
                   <div className="w-[15%] text-center">Cant.</div>
                   <div className="w-[20%] text-right">Precio Unitario</div>
@@ -132,7 +132,7 @@ export default async function InvoiceDetailPage(props: {
                 </div>
                 <div className="flex justify-between w-48 font-bold text-lg mt-2 pt-2 border-t border-gray-100">
                   <span className="text-gray-400">TOTAL</span>
-                  <span className="text-[#7c3aed]">${Number(invoice.total_amount).toLocaleString()}</span>
+                  <span className="text-primary">${Number(invoice.total_amount).toLocaleString()}</span>
                 </div>
               </div>
 
@@ -140,13 +140,13 @@ export default async function InvoiceDetailPage(props: {
           </div>
         </div>
 
-        {/* RIGHT COLUMN (55%) */}
-        <div className="w-full lg:w-[55%] flex flex-col print:w-full print:block">
+        {/* RIGHT COLUMN (62%) */}
+        <div className="w-full lg:w-[62%] flex flex-col print:w-full print:block">
           <div className="flex items-center gap-2 mb-2 text-gray-800 font-bold text-lg print:hidden">
-            <FileText className="w-5 h-5 text-[#7c3aed]" />
+            <FileText className="w-5 h-5 text-primary" />
             Documento PDF Generado
           </div>
-          <div className="flex items-center gap-2 mb-4 text-xs font-semibold text-[#7c3aed] uppercase tracking-wider print:hidden">
+          <div className="flex items-center gap-2 mb-4 text-xs font-semibold text-primary uppercase tracking-wider print:hidden">
             <Eye className="w-4 h-4" />
             Vista Previa PDF
           </div>

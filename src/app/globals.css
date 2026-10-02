@@ -382,25 +382,7 @@ body.webmaster-public-body,
   scrollbar-width: thin !important;
 }
 
-/* Scroll Fade Indicator for all main page scroll containers */
-@supports (animation-timeline: scroll()) {
-  main > [class*="overflow-"],
-  main > div > [class*="overflow-"],
-  .scroll-container {
-    mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 40px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 40px), transparent 100%);
-    animation: fade-out-mask linear both;
-    animation-timeline: scroll(self);
-    animation-range: 85% 100%;
-  }
 
-  @keyframes fade-out-mask {
-    to {
-      mask-image: linear-gradient(to bottom, black 0%, black 100%, black 100%);
-      -webkit-mask-image: linear-gradient(to bottom, black 0%, black 100%, black 100%);
-    }
-  }
-}
 
 @layer base {
   /* Webmaster Typographic Scale System */

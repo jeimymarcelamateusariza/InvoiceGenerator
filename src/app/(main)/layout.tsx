@@ -1,4 +1,4 @@
-import { LogoutButton } from "@/components/auth/LogoutButton";
+import React from "react";
 
 export default function MainLayout({
   children,
@@ -6,16 +6,10 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white shadow-sm border-b p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-800">Invoice Printer App</h1>
-          <LogoutButton />
-        </div>
-      </header>
-      <main className="flex-1 container mx-auto p-4 sm:p-6">
+    <div className="min-h-screen bg-primary p-2.5 sm:p-4 md:p-5 flex flex-col justify-center items-center font-sans antialiased">
+      <div className="w-[98%] sm:w-[96%] md:w-[95%] max-w-7xl rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl p-6 sm:p-8 md:p-10 min-h-[92vh] flex flex-col justify-between border border-white/10 transition-colors duration-300">
         {children}
-      </main>
+      </div>
     </div>
   );
 }

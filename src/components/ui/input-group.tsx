@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
 
 const InputGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => {
@@ -14,15 +15,12 @@ const InputGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 )
 InputGroup.displayName = "InputGroup"
 
-const InputGroupInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+const InputGroupInput = React.forwardRef<HTMLInputElement, React.ComponentProps<typeof Input>>(
   ({ className, type, ...props }, ref) => {
     return (
-      <input
+      <Input
         type={type}
-        className={cn(
-          "flex h-12 w-full rounded-xl border border-neutral/20 bg-transparent px-4 py-2 text-sm text-white placeholder:text-neutral/50 focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
+        className={className}
         ref={ref}
         {...props}
       />

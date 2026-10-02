@@ -1,94 +1,50 @@
-import { fetchAPI } from '@/lib/api';
-import { InvoiceList } from '@/components/invoice/InvoiceList';
-import { PaginatedResponse } from '@/types/api';
-import { Invoice } from '@/types/invoice';
+import React from "react";
+import { FileText, MapPin } from "lucide-react";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { NavigationCard } from "@/components/dashboard/NavigationCard";
 
-export default async function HomePage(
-  props: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-  }
-) {
-  const searchParams = await props.searchParams;
-  const page = (searchParams?.page as string) || '1';
-  const search = (searchParams?.search as string) || '';
-
-  // fetch data using the API client
-  let data: PaginatedResponse<Invoice>;
-  try {
-    data = await fetchAPI(`/invoices?page=${page}&search=${search}`);
-  } catch (error) {
-    console.error("Error fetching invoices (using mock data fallback):", error);
-    // Provide fallback mock data so you can see the UI
-    data = {
-      data: [
-        {
-          id: "inv-123",
-          customer_id: "cust-1",
-          customer: {
-            id: "cust-1",
-            customer_type: "person",
-            first_name: "Juan",
-            last_name: "Pérez",
-            company_name: null,
-            document_type: "CC",
-            document_number: "1234567890",
-            email: "juan@email.com",
-            address: "Calle Falsa 123",
-            mobile_indicative: "+57",
-            mobile: "3001234567"
-          },
-          issue_date: "2026-09-01",
-          due_date: "2026-09-15",
-          status: "ISSUED",
-          subtotal: "85000",
-          discount_total: "0",
-          tax_total: "16150",
-          total_amount: "101150",
-          items: [],
-          created_at: "2026-09-01T10:00:00Z"
-        },
-        {
-          id: "inv-456",
-          customer_id: "cust-2",
-          customer: {
-            id: "cust-2",
-            customer_type: "company",
-            first_name: null,
-            last_name: null,
-            company_name: "Servicomputel S.A.S",
-            document_type: "NIT",
-            document_number: "900123456-7",
-            email: "admin@servicomputel.com",
-            address: "Av Siempre Viva 742",
-            mobile_indicative: "+57",
-            mobile: "3109876543"
-          },
-          issue_date: "2026-09-10",
-          due_date: "2026-09-25",
-          status: "PAID",
-          subtotal: "150000",
-          discount_total: "0",
-          tax_total: "28500",
-          total_amount: "178500",
-          items: [],
-          created_at: "2026-09-10T10:00:00Z"
-        }
-      ],
-      meta: { current_page: 1, last_page: 1, per_page: 10, total: 2 }
-    };
-  }
-
+export default function HomePage() {
   return (
-    <div className="container mx-auto py-10 px-4 sm:px-6 lg:px-8">
-      <div className="sm:flex sm:items-center mb-8">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Invoices</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            A list of all the invoices in your account.
+    <div className="flex flex-col flex-1 justify-between gap-8">
+      {/* Header section */}
+      <DashboardHeader />
+
+      {/* Main Content: Module Cards */}
+      <main className="my-auto py-6">
+        <div className="text-center max-w-xl mx-auto mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold text-slate-700 dark:text-slate-200">
+            ¿Qué querés gestionar hoy?
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Accedé rápidamente a la gestión de facturas o a las rutas de entrega asignadas.
           </p>
         </div>
-      </div>
-      <InvoiceList data={data} search={search} />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+          <NavigationCard
+            title="Facturas"
+            description="Consultá y gestioná las facturas de clientes, estados de cobro, vistas previas e impresión de comprobantes."
+            href="/invoices"
+            icon={<FileText className="w-7 h-7 sm:w-8 sm:h-8" />}
+            badge="Módulo Principal"
+            actionText="Ir a Facturas"
+          />
+
+          <NavigationCard
+            title="Rutas de Entrega"
+            description="Controlá la secuencia de visitas por clientes, ordenamiento de entregas y estado operacional de rutas."
+            href="/rutas"
+            icon={<MapPin className="w-7 h-7 sm:w-8 sm:h-8" />}
+            badge="Módulo Operaciones"
+            actionText="Ir a Rutas"
+          />
+        </div>
+      </main>
+
+      {/* Footer info */}
+      <footer className="pt-6 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400 dark:text-slate-500">
+        Invoice & Route Generator System &copy; {new Date().getFullYear()}
+      </footer>
     </div>
   );
 }
