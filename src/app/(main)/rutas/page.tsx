@@ -11,6 +11,12 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -28,6 +34,7 @@ import {
   Play,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 
 interface RutaItem {
   id: string;
@@ -234,9 +241,11 @@ export default function RutasPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
+    <div className="flex flex-col flex-1 gap-4">
+      <Breadcrumbs items={[{ label: 'Rutas de Facturación' }]} />
+
       {/* Encabezado de la página */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Rutas de Facturación</h1>
           <p className="text-muted-foreground mt-1">
@@ -274,7 +283,7 @@ export default function RutasPage() {
         /* Grilla de Tarjetas de Rutas */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rutas.map((ruta) => (
-            <Card key={ruta.id} className="flex flex-col justify-between h-full shadow-sm hover:shadow-md transition-shadow">
+            <Card key={ruta.id} variant="highlight" className="flex flex-col justify-between h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Link href={`/rutas/${ruta.id}`} className="hover:underline flex-1 min-w-0">
                   <CardTitle className="text-lg font-bold truncate pr-2 text-primary hover:text-primary/80 transition-colors">{ruta.nombre}</CardTitle>
@@ -297,34 +306,56 @@ export default function RutasPage() {
               </CardContent>
 
               <CardFooter className="flex flex-wrap items-center justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => router.push(`/rutas/${ruta.id}`)}
-                  className="flex items-center gap-1.5"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  Ver detalle
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleOpenEdit(ruta.id, ruta.nombre)}
-                  disabled={fetchingDetail}
-                  className="flex items-center gap-1.5"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Editar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => confirmDelete(ruta.id, ruta.nombre)}
-                  className="flex items-center gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Eliminar
-                </Button>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="default"
+                        size="icon"
+                        onClick={() => router.push(`/rutas/${ruta.id}`)}
+                        className="shadow-sm"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Ver detalle</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleOpenEdit(ruta.id, ruta.nombre)}
+                        disabled={fetchingDetail}
+                        className="shadow-sm"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Editar</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => confirmDelete(ruta.id, ruta.nombre)}
+                        className="shadow-sm text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Eliminar</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </CardFooter>
             </Card>
           ))}
@@ -377,7 +408,7 @@ export default function RutasPage() {
                   <Users className="h-10 w-10 mb-2 opacity-40" />
                   <p className="font-medium text-foreground">Esta ruta no tiene clientes asignados</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                    Podés agregar clientes haciendo clic en el botón Editar de la tarjeta.
+                    Puedes agregar clientes haciendo clic en el botón Editar de la tarjeta.
                   </p>
                 </div>
               ) : (
@@ -469,7 +500,7 @@ export default function RutasPage() {
                   className="font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Podés separar los IDs utilizando comas, espacios o saltos de línea. Los duplicados se eliminarán automáticamente.
+                  Puedes separar los IDs utilizando comas, espacios o saltos de línea. Los duplicados se eliminarán automáticamente.
                 </p>
               </div>
 
@@ -501,7 +532,7 @@ export default function RutasPage() {
               ¿Eliminar Ruta?
             </h2>
             <p className="text-muted-foreground text-sm">
-              ¿Estás seguro de que querés eliminar la ruta <strong className="text-foreground">{deletingName}</strong>? Esta acción eliminará la configuración y la asociación de sus clientes.
+              ¿Estás seguro de que quieres eliminar la ruta <strong className="text-foreground">{deletingName}</strong>? Esta acción eliminará la configuración y la asociación de sus clientes.
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">

@@ -2,6 +2,8 @@ import { invoiceService, InvoiceDetailPrint, PrintButton } from '@/features/invo
 import Link from 'next/link';
 import { CreditCard, Edit2, FileText, Eye, ZoomIn, ZoomOut, RotateCw, Download, MoreVertical, Info, User, MapPin, Mail, Phone, Calendar } from 'lucide-react';
 
+import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
+
 export default async function InvoiceDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
@@ -14,12 +16,9 @@ export default async function InvoiceDetailPage(props: {
   const issuerName = issuer.company_name || 'SERVICOMPUTEL';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 print:p-0 print:bg-white">
-      {/* Breadcrumb / Top */}
-      <div className="text-sm text-gray-500 mb-6 flex items-center gap-2 print:hidden">
-        <Link href="/invoices" className="hover:text-primary">Facturas</Link>
-        <span>&gt;</span>
-        <span className="text-gray-900 font-medium">Ver factura</span>
+    <div className="flex flex-col flex-1 gap-4 print:p-0 print:bg-white">
+      <div className="print:hidden">
+        <Breadcrumbs items={[{ label: 'Facturas', href: '/invoices' }, { label: 'Ver factura' }]} />
       </div>
 
       <div className="mb-6 print:hidden">

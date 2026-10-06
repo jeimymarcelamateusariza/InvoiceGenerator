@@ -1,8 +1,8 @@
 project: InvoiceGenerator
 mode: openspec
-strict_tdd: false
+strict_tdd: true
 context: "Invoice generator and previewing application built with Next.js 15, React 19, TypeScript, Tailwind CSS v4, and better-sqlite3."
 testing:
-  runner: none
-  frameworks: []
-  capabilities: "Jest/React Testing Library syntax test files exist in src/ (5 test files found), but no test runner or test script is configured in package.json."
+  runner: "vitest"
+  frameworks: ["vitest", "@testing-library/react"]
+  capabilities: "Vitest configured with jsdom environment. Unit and component testing with React Testing Library."

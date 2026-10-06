@@ -36,7 +36,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse" />
+      <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
     );
   }
 
@@ -45,12 +45,12 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       type="button"
       aria-label="Cambiar tema"
-      className="p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all duration-200 border border-slate-200 dark:border-slate-700/60 shadow-xs focus:outline-hidden"
+      className="p-2.5 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-all duration-200 border border-border shadow-xs focus:outline-hidden cursor-pointer"
     >
       {isDark ? (
-        <Sun className="w-5 h-5 text-amber-400" />
+        <Sun className="w-5 h-5 text-warning" />
       ) : (
-        <Moon className="w-5 h-5 text-slate-700" />
+        <Moon className="w-5 h-5 text-foreground" />
       )}
     </button>
   );

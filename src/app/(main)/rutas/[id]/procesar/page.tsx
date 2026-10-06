@@ -12,6 +12,12 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   ArrowLeft,
   Play,
   RotateCcw,
@@ -30,10 +36,12 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { invoiceService } from '@/features/invoices/api/invoiceService';
 import type { InvoiceFromApi } from '@/features/invoices/types';
 import { RouteCsvUploader } from '@/features/routes/components/RouteCsvUploader';
 import { RouteCsvValidationReport } from '@/features/routes/components/RouteCsvValidationReport';
+import { RouteManualOrderModal } from '@/features/routes/components/RouteManualOrderModal';
 import {
   parseAndValidateCsv,
   type CsvValidationReport,
@@ -98,11 +106,22 @@ export default function BatchProcessRoutePage() {
   // State hooks for CSV Route Ordering
   const [csvReport, setCsvReport] = useState<CsvValidationReport | null>(null);
   const [csvFileName, setCsvFileName] = useState<string | null>(null);
+  const [isManualOrderModalOpen, setIsManualOrderModalOpen] = useState(false);
 
   const handleCsvFileSelected = (fileContent: string, fileName: string) => {
     const report = parseAndValidateCsv(fileContent, clientStates);
     setCsvReport(report);
     setCsvFileName(fileName);
+  };
+
+  const handleManualOrderApply = (csvString: string) => {
+    const report = parseAndValidateCsv(csvString, clientStates);
+    if (report) {
+      report.source = 'MANUAL_INPUT';
+    }
+    setCsvReport(report);
+    setCsvFileName(null);
+    setIsManualOrderModalOpen(false);
   };
 
   const handleResetCsv = () => {
@@ -320,22 +339,14 @@ export default function BatchProcessRoutePage() {
     metrics.total > 0 ? Math.round((metrics.processed / metrics.total) * 100) : 0;
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl space-y-8">
-      {/* Navigation Breadcrumbs */}
-      <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <Link href="/rutas" className="hover:text-foreground transition-colors">
-          Rutas
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <Link
-          href={`/rutas/${route.id}`}
-          className="hover:text-foreground transition-colors truncate max-w-[150px]"
-        >
-          {route.nombre}
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="font-medium text-foreground">Procesar Facturas</span>
-      </nav>
+    <div className="flex flex-col flex-1 gap-4">
+      <Breadcrumbs
+        items={[
+          { label: 'Rutas', href: '/rutas' },
+          { label: route.nombre, href: `/rutas/${route.id}` },
+          { label: 'Procesar Facturas' },
+        ]}
+      />
 
       {/* Header Viewport */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
@@ -354,22 +365,12 @@ export default function BatchProcessRoutePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/rutas/${route.id}`)}
-            disabled={metrics.isRunning}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver al Detalle
-          </Button>
-
           {metrics.isCompleted || metrics.processed > 0 ? (
             <Button
               onClick={startProcessing}
               disabled={metrics.isRunning}
               variant="outline"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 shadow-sm"
             >
               <RotateCcw className="h-4 w-4" />
               Reiniciar
@@ -662,8 +663,19 @@ export default function BatchProcessRoutePage() {
         </CardContent>
       </Card>
 
-      {/* CSV Route Invoice Ordering Section */}
-      <div className="space-y-6 pt-4 border-t">
+      {/* Route Invoice Ordering Section */}
+      <div className="space-y-6 pt-6 border-t">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="text-xl font-bold tracking-tight">Orden de las facturas</h2>
+          <Button
+            variant="secondary"
+            onClick={() => setIsManualOrderModalOpen(true)}
+            disabled={!metrics.isCompleted}
+          >
+            Ingresar orden
+          </Button>
+        </div>
+
         <RouteCsvUploader
           isLocked={!metrics.isCompleted}
           onFileSelected={handleCsvFileSelected}
@@ -671,8 +683,21 @@ export default function BatchProcessRoutePage() {
           currentFileName={csvFileName}
         />
 
-        {csvReport && <RouteCsvValidationReport report={csvReport} />}
+        {(metrics.isCompleted || clientStates.some((c) => c.status === 'success' && c.invoices && c.invoices.length > 0)) && (
+          <RouteCsvValidationReport
+            clientStates={clientStates}
+            report={csvReport}
+            routeId={routeId}
+            onResetReport={handleResetCsv}
+          />
+        )}
       </div>
+
+      <RouteManualOrderModal
+        isOpen={isManualOrderModalOpen}
+        onClose={() => setIsManualOrderModalOpen(false)}
+        onApply={handleManualOrderApply}
+      />
     </div>
   );
 }

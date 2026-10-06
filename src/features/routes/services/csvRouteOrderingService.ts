@@ -1,5 +1,5 @@
 import type { InvoiceFromApi } from '@/features/invoices/types';
-import type { RouteClientProcessingState } from '@/app/rutas/[id]/procesar/page';
+import type { RouteClientProcessingState } from '@/app/(main)/rutas/[id]/procesar/page';
 
 export interface CsvRowRaw {
   lineNumber: number;
@@ -44,6 +44,8 @@ export interface OrderedClientInvoices {
   totalAmount: number;
 }
 
+export type OrderSource = 'PROCESSING' | 'CSV' | 'MANUAL' | 'MANUAL_INPUT';
+
 export interface CsvValidationReport {
   isValid: boolean;
   blockingErrors: CsvValidationError[];
@@ -53,6 +55,35 @@ export interface CsvValidationReport {
   totalOrderedInvoices: number;
   totalMatchedClients: number;
   grandTotalAmount: number;
+  source?: OrderSource;
+}
+
+/**
+ * Builds default processing order from route client states (status === 'success' and invoices.length > 0).
+ * Preserves route query order with sequential position index 1, 2, 3...
+ */
+export function buildDefaultProcessingOrder(
+  clientStates: RouteClientProcessingState[]
+): OrderedClientInvoices[] {
+  const result: OrderedClientInvoices[] = [];
+  let orden = 1;
+
+  for (const client of clientStates) {
+    if (client.status === 'success' && client.invoices && client.invoices.length > 0) {
+      const totalAmount = client.invoices.reduce(
+        (acc: number, inv: InvoiceFromApi) => acc + (Number(inv.total_amount) || 0),
+        0
+      );
+      result.push({
+        clientId: client.clientId,
+        orden: orden++,
+        invoices: client.invoices,
+        totalAmount,
+      });
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -254,7 +285,7 @@ export function parseAndValidateCsv(
     if (activeRouteClientsMap.has(clientId)) {
       const routeClient = activeRouteClientsMap.get(clientId)!;
       const totalAmount = routeClient.invoices.reduce(
-        (acc, inv) => acc + (Number(inv.total_amount) || 0),
+        (acc: number, inv: InvoiceFromApi) => acc + (Number(inv.total_amount) || 0),
         0
       );
 

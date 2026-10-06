@@ -9,6 +9,7 @@ import { invoiceService } from '@/features/invoices/api/invoiceService';
 import type { InvoiceFromApi } from '@/features/invoices/types';
 import { InvoicePrintView } from '@/features/invoices/components/InvoicePrintView';
 import { InvoiceBatchPrintContainer } from './InvoiceBatchPrintContainer';
+import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 
 export interface InvoiceRoutePreviewViewProps {
   routeId: string;
@@ -219,16 +220,16 @@ export function InvoiceRoutePreviewView({
       {/* Top Fixed / Sticky Toolbar */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b shadow-xs py-3 px-4 sm:px-6">
         <div className="container mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Left: Return Navigation */}
+          {/* Left: Return Navigation & Breadcrumbs */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-            <Link
-              href={`/rutas/${routeId}`}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-md hover:bg-accent"
-              aria-label="Volver a la ruta"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Volver a la Ruta</span>
-            </Link>
+            <Breadcrumbs
+              showThemeToggle={false}
+              items={[
+                { label: 'Rutas', href: '/rutas' },
+                { label: 'Detalle', href: `/rutas/${routeId}` },
+                { label: 'Vista Previa' },
+              ]}
+            />
 
             <span className="hidden sm:inline-block text-border">|</span>
             <span className="text-xs font-medium text-muted-foreground truncate hidden sm:inline-block">

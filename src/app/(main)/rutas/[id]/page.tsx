@@ -12,6 +12,12 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   ArrowLeft,
   Play,
   Users,
@@ -24,6 +30,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 
 interface RouteDetail {
   id: string;
@@ -113,15 +120,8 @@ export default function RouteDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl space-y-8">
-      {/* Breadcrumb y navegación superior */}
-      <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <Link href="/rutas" className="hover:text-foreground transition-colors">
-          Rutas
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="font-medium text-foreground truncate max-w-[200px]">{route.nombre}</span>
-      </nav>
+    <div className="flex flex-col flex-1 gap-4">
+      <Breadcrumbs items={[{ label: 'Rutas', href: '/rutas' }, { label: route.nombre }]} />
 
       {/* Header con título y botón de acción */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b">
@@ -139,14 +139,6 @@ export default function RouteDetailPage() {
 
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
-            onClick={() => router.push('/rutas')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver
-          </Button>
-          <Button
             onClick={() => router.push(`/rutas/${route.id}/procesar`)}
             size="lg"
             className="flex items-center gap-2 shadow-md hover:shadow-lg transition-all bg-primary font-semibold"
@@ -159,7 +151,7 @@ export default function RouteDetailPage() {
 
       {/* Tarjetas informativas de metadata */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="shadow-sm">
+        <Card variant="highlight">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Clientes Asignados</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -172,7 +164,7 @@ export default function RouteDetailPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card variant="highlight">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Fecha de Creación</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -194,7 +186,7 @@ export default function RouteDetailPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card variant="highlight">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Última Actualización</CardTitle>
             <RefreshCw className="h-4 w-4 text-muted-foreground" />
@@ -222,7 +214,7 @@ export default function RouteDetailPage() {
       </div>
 
       {/* Lista de clientes asignados */}
-      <Card className="shadow-sm">
+      <Card variant="highlight">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -246,7 +238,7 @@ export default function RouteDetailPage() {
               <Users className="h-10 w-10 mb-2 opacity-40" />
               <p className="font-medium text-foreground">No hay clientes asignados</p>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-                Podés editar esta ruta desde el módulo general de rutas para agregar IDs de cliente.
+                Puedes editar esta ruta desde el módulo general de rutas para agregar IDs de cliente.
               </p>
             </div>
           ) : (

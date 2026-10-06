@@ -1,8 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { CsvValidationReport, OrderedClientInvoices } from '../services/csvRouteOrderingService';
-import { reorderClientList, areClientOrdersEqual } from '../services/csvRouteOrderingService';
+import type {
+  CsvValidationReport,
+  OrderedClientInvoices,
+  OrderSource,
+} from '../services/csvRouteOrderingService';
+import {
+  reorderClientList,
+  areClientOrdersEqual,
+  buildDefaultProcessingOrder,
+} from '../services/csvRouteOrderingService';
+import type { RouteClientProcessingState } from '@/app/(main)/rutas/[id]/procesar/page';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -25,8 +34,10 @@ import {
 } from 'lucide-react';
 
 interface RouteCsvValidationReportProps {
-  report: CsvValidationReport;
+  report: CsvValidationReport | null;
+  clientStates: RouteClientProcessingState[];
   routeId?: string;
+  onResetReport?: () => void;
 }
 
 const formatCurrency = (amount: number): string => {
@@ -38,18 +49,52 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-export function RouteCsvValidationReport({ report, routeId: propRouteId }: RouteCsvValidationReportProps) {
+export function RouteCsvValidationReport({
+  report,
+  clientStates,
+  routeId: propRouteId,
+  onResetReport,
+}: RouteCsvValidationReportProps) {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const activeRouteId = propRouteId || params?.id || '';
 
-  const [orderedClients, setOrderedClients] = useState<OrderedClientInvoices[]>(report.orderedClients);
-  const [initialCsvOrder, setInitialCsvOrder] = useState<OrderedClientInvoices[]>(report.orderedClients);
-  const [isManuallyModified, setIsManuallyModified] = useState<boolean>(false);
+  const getInitialOrder = (): OrderedClientInvoices[] => {
+    if (report && report.isValid) {
+      return report.orderedClients;
+    }
+    return buildDefaultProcessingOrder(clientStates);
+  };
+
+  const getInitialSource = (): OrderSource => {
+    if (report && report.isValid) {
+      return report.source || 'CSV';
+    }
+    return 'PROCESSING';
+  };
+
+  const [orderedClients, setOrderedClients] = useState<OrderedClientInvoices[]>(getInitialOrder);
+  const [initialOrder, setInitialOrder] = useState<OrderedClientInvoices[]>(getInitialOrder);
+  const [orderSource, setOrderSource] = useState<OrderSource>(getInitialSource);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedClients, setExpandedClients] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (report && report.isValid) {
+      setOrderedClients(report.orderedClients);
+      setInitialOrder(report.orderedClients);
+      setOrderSource(report.source || 'CSV');
+    } else {
+      const defaultOrder = buildDefaultProcessingOrder(clientStates);
+      setOrderedClients(defaultOrder);
+      setInitialOrder(defaultOrder);
+      setOrderSource('PROCESSING');
+    }
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+  }, [report, clientStates]);
 
   const handleOpenPreview = () => {
     const orderedInvoiceIds = orderedClients.flatMap((client) => client.invoices.map((inv) => inv.id));
@@ -58,14 +103,6 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
       router.push(`/rutas/${activeRouteId}/preview`);
     }
   };
-
-  useEffect(() => {
-    setOrderedClients(report.orderedClients);
-    setInitialCsvOrder(report.orderedClients);
-    setIsManuallyModified(false);
-    setDraggedIndex(null);
-    setDropTargetIndex(null);
-  }, [report]);
 
   const toggleExpandClient = (clientId: string) => {
     setExpandedClients((prev) => ({
@@ -104,8 +141,13 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
       const newOrderedList = reorderClientList(orderedClients, draggedIndex, dropIndex);
       setOrderedClients(newOrderedList);
 
-      const modified = !areClientOrdersEqual(newOrderedList, initialCsvOrder);
-      setIsManuallyModified(modified);
+      const modified = !areClientOrdersEqual(newOrderedList, initialOrder);
+      if (modified) {
+        setOrderSource('MANUAL');
+      } else {
+        const baseSource: OrderSource = report && report.isValid ? 'CSV' : 'PROCESSING';
+        setOrderSource(baseSource);
+      }
     }
 
     setDraggedIndex(null);
@@ -118,88 +160,116 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
   };
 
   const handleResetOrder = () => {
-    setOrderedClients(initialCsvOrder);
-    setIsManuallyModified(false);
+    setOrderedClients(initialOrder);
+    const baseSource: OrderSource = report && report.isValid ? 'CSV' : 'PROCESSING';
+    setOrderSource(baseSource);
     setDraggedIndex(null);
     setDropTargetIndex(null);
   };
 
-  // BLOCKING ERROR VIEW
-  if (!report.isValid) {
-    return (
-      <Card className="border-destructive/50 bg-destructive/5 shadow-xs">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2 text-destructive">
-            <XCircle className="h-6 w-6 shrink-0" />
-            <div>
-              <CardTitle className="text-lg text-destructive">
-                Error Bloqueante de Validaciones CSV
-              </CardTitle>
-              <CardDescription className="text-destructive/80 text-xs">
-                El archivo CSV contiene errores estructurales que impiden generar la lista de facturas ordenadas.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {report.blockingErrors.map((err, idx) => (
-              <div
-                key={idx}
-                className="p-3.5 rounded-lg border border-destructive/30 bg-background text-sm space-y-1.5 shadow-xs"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono font-bold text-xs uppercase px-2 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">
-                    {err.code}
-                  </span>
-                  {err.lineNumbers && err.lineNumbers.length > 0 && (
-                    <span className="text-xs font-mono font-semibold text-muted-foreground">
-                      {err.lineNumbers.length === 1
-                        ? `Línea ${err.lineNumbers[0]}`
-                        : `Líneas: ${err.lineNumbers.join(', ')}`}
-                    </span>
-                  )}
-                </div>
-                <p className="font-medium text-foreground">{err.message}</p>
-                {err.details && (
-                  <p className="text-xs text-muted-foreground font-mono">{err.details}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // VALID / WARNINGS VIEW
-  const hasWarnings = report.warnings.length > 0;
+  const hasWarnings = report ? report.isValid && report.warnings.length > 0 : false;
   const filteredClients = isFilterActive
     ? orderedClients.filter((client) =>
         client.clientId.toLowerCase().includes(searchQuery.trim().toLowerCase())
       )
     : orderedClients;
 
+  const totalMatchedClients = orderedClients.length;
+  const totalOrderedInvoices = orderedClients.reduce(
+    (acc, client) => acc + client.invoices.length,
+    0
+  );
+  const grandTotalAmount = orderedClients.reduce(
+    (acc, client) => acc + client.totalAmount,
+    0
+  );
+
   return (
     <div className="space-y-6">
+      {/* BLOCKING ERRORS CARD (If CSV report exists and is invalid) */}
+      {report && !report.isValid && (
+        <Card className="border-destructive/50 bg-destructive/5 shadow-xs">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2 text-destructive">
+              <XCircle className="h-6 w-6 shrink-0" />
+              <div>
+                <CardTitle className="text-lg text-destructive">
+                  Error Bloqueante de Validaciones CSV
+                </CardTitle>
+                <CardDescription className="text-destructive/80 text-xs">
+                  El archivo CSV contiene errores estructurales que impiden generar la lista de facturas ordenadas. Se utiliza el orden de procesamiento por defecto.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              {report.blockingErrors.map((err, idx) => (
+                <div
+                  key={idx}
+                  className="p-3.5 rounded-lg border border-destructive/30 bg-background text-sm space-y-1.5 shadow-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs uppercase px-2 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">
+                      {err.code}
+                    </span>
+                    {err.lineNumbers && err.lineNumbers.length > 0 && (
+                      <span className="text-xs font-mono font-semibold text-muted-foreground">
+                        {err.lineNumbers.length === 1
+                          ? `Línea ${err.lineNumbers[0]}`
+                          : `Líneas: ${err.lineNumbers.join(', ')}`}
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-medium text-foreground">{err.message}</p>
+                  {err.details && (
+                    <p className="text-xs text-muted-foreground font-mono">{err.details}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Status & Summary Metrics Card */}
-      <Card className={hasWarnings ? 'border-amber-300 dark:border-amber-800' : 'border-emerald-300 dark:border-emerald-800'}>
+      <Card
+        className={
+          hasWarnings
+            ? 'border-amber-300 dark:border-amber-800'
+            : report && !report.isValid
+            ? 'border-slate-300 dark:border-slate-700'
+            : 'border-emerald-300 dark:border-emerald-800'
+        }
+      >
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
               {hasWarnings ? (
                 <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0" />
+              ) : report && !report.isValid ? (
+                <AlertCircle className="h-6 w-6 text-slate-500 shrink-0" />
               ) : (
                 <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
               )}
               <div>
                 <CardTitle className="text-lg">
-                  {hasWarnings ? 'Validación Completada con Advertencias' : 'Validación Completada Exitosamente'}
+                  {hasWarnings
+                    ? 'Validación Completada con Advertencias'
+                    : report && !report.isValid
+                    ? 'Orden de Procesamiento (CSV con Errores)'
+                    : report && report.isValid
+                    ? 'Validación Completada Exitosamente'
+                    : 'Orden de Procesamiento de Ruta'}
                 </CardTitle>
                 <CardDescription className="text-xs">
                   {hasWarnings
                     ? 'Se detectaron discrepancias entre el CSV y la ruta, pero la lista de facturas ordenadas fue generada correctamente.'
-                    : 'Todas las entradas del CSV coinciden perfectamente con los clientes y facturas activas de la ruta.'}
+                    : report && !report.isValid
+                    ? 'No se pudo aplicar el ordenamiento CSV debido a errores en el archivo. Se utiliza el orden de procesamiento por defecto.'
+                    : report && report.isValid
+                    ? 'Todas las entradas del CSV coinciden perfectamente con los clientes y facturas activas de la ruta.'
+                    : 'Lista de facturas ordenadas según el orden de procesamiento original de la ruta.'}
                 </CardDescription>
               </div>
             </div>
@@ -208,7 +278,8 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
               <Button
                 type="button"
                 onClick={handleOpenPreview}
-                className="inline-flex items-center gap-2 font-semibold shadow-xs cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={orderedClients.length === 0}
+                className="inline-flex items-center gap-2 font-semibold shadow-xs cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
                 <Eye className="h-4 w-4" />
                 Vista previa de facturas
@@ -216,12 +287,20 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
 
               <span
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
-                  hasWarnings
+                  orderSource === 'MANUAL' || orderSource === 'MANUAL_INPUT'
                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
-                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                    : orderSource === 'CSV'
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                    : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800'
                 }`}
               >
-                {hasWarnings ? 'Con Advertencias' : 'Ordenamiento Aplicado'}
+                {orderSource === 'MANUAL'
+                  ? 'Orden modificado manualmente'
+                  : orderSource === 'MANUAL_INPUT'
+                  ? 'Orden manual'
+                  : orderSource === 'CSV'
+                  ? 'Orden CSV'
+                  : 'Orden de procesamiento'}
               </span>
             </div>
           </div>
@@ -237,7 +316,7 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Clientes Ordenados</p>
                 <p className="text-xl font-bold font-mono text-foreground">
-                  {report.totalMatchedClients}
+                  {totalMatchedClients}
                 </p>
               </div>
             </div>
@@ -249,7 +328,7 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Facturas Totales</p>
                 <p className="text-xl font-bold font-mono text-foreground">
-                  {report.totalOrderedInvoices}
+                  {totalOrderedInvoices}
                 </p>
               </div>
             </div>
@@ -261,14 +340,14 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
               <div>
                 <p className="text-xs font-medium text-muted-foreground">Monto Grand Total</p>
                 <p className="text-xl font-bold font-mono text-foreground">
-                  {formatCurrency(report.grandTotalAmount)}
+                  {formatCurrency(grandTotalAmount)}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Discrepancy Warnings Summary Cards */}
-          {hasWarnings && (
+          {report && report.isValid && hasWarnings && (
             <div className="space-y-3">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                 <AlertCircle className="h-4 w-4 text-amber-500" />
@@ -335,10 +414,16 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">Facturas Reordenadas por CSV</CardTitle>
+              <CardTitle className="text-lg">
+                {orderSource === 'CSV'
+                  ? 'Facturas Reordenadas por CSV'
+                  : orderSource === 'MANUAL' || orderSource === 'MANUAL_INPUT'
+                  ? 'Facturas Reordenadas Manualmente'
+                  : 'Facturas por Orden de Procesamiento'}
+              </CardTitle>
             </div>
             <div className="flex items-center gap-2">
-              {isManuallyModified ? (
+              {orderSource === 'MANUAL' ? (
                 <>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
                     Orden modificado manualmente
@@ -349,19 +434,44 @@ export function RouteCsvValidationReport({ report, routeId: propRouteId }: Route
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-background border border-input hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
-                    Restablecer orden CSV
+                    Restablecer orden anterior
                   </button>
                 </>
-              ) : (
+              ) : orderSource === 'MANUAL_INPUT' ? (
+                <>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                    Orden manual
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onResetReport) onResetReport();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-background border border-input hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    Quitar orden manual
+                  </button>
+                </>
+              ) : orderSource === 'CSV' ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Orden CSV ✓
+                  Orden CSV
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Orden de procesamiento
                 </span>
               )}
             </div>
           </div>
           <CardDescription>
-            Lista de clientes y facturas ordenadas según el archivo CSV subido o ajustadas manualmente mediante arrastrar y soltar.
+            {orderSource === 'CSV'
+              ? 'Lista de clientes y facturas ordenadas según el archivo CSV subido.'
+              : orderSource === 'MANUAL' || orderSource === 'MANUAL_INPUT'
+              ? 'Lista de clientes y facturas ajustadas manualmente.'
+              : 'Lista de clientes y facturas ordenadas según el orden de procesamiento de la ruta.'}
           </CardDescription>
         </CardHeader>
 

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { invoiceService, InvoiceFilters } from '@/features/invoices';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Eye, Bell } from 'lucide-react';
+import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 
 export default async function InvoicesPage(props: {
   searchParams: Promise<{ page?: string; search?: string; status?: string; notification_count?: string }>;
@@ -17,9 +18,10 @@ export default async function InvoicesPage(props: {
   const meta = response.meta || { total: 0, last_page: 1, current_page: 1 };
 
   return (
-    <div className="p-8 bg-background min-h-screen">
+    <div className="flex flex-col flex-1 gap-4">
+      <Breadcrumbs items={[{ label: 'Facturas' }]} />
 
-      <div className="p-4 md:p-6 bg-muted dark:bg-muted/50 rounded-lg">
+      <div className="p-4 md:p-6 bg-card border border-border rounded-xl shadow-xs">
         <InvoiceFilters />
         <Table>
           <TableHeader>
@@ -101,33 +103,6 @@ export default async function InvoicesPage(props: {
             )}
           </TableBody>
         </Table>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-        <div>
-          Total facturas: {meta.total}
-        </div>
-        <div className="flex items-center gap-2">
-          {page > 1 ? (
-            <Link href={`?page=${page - 1}${search ? '&search=' + search : ''}${status ? '&status=' + status : ''}`} className="hover:text-gray-900">
-              &lt; Anterior
-            </Link>
-          ) : (
-            <span className="text-gray-300">&lt; Anterior</span>
-          )}
-
-          <span className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 bg-white font-medium text-gray-900">
-            {page}
-          </span>
-
-          {page < meta.last_page ? (
-            <Link href={`?page=${page + 1}${search ? '&search=' + search : ''}${status ? '&status=' + status : ''}`} className="hover:text-gray-900">
-              Siguiente &gt;
-            </Link>
-          ) : (
-            <span className="text-gray-300">Siguiente &gt;</span>
-          )}
-        </div>
       </div>
     </div>
   );

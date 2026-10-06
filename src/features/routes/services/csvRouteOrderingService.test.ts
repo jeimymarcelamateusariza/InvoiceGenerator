@@ -5,11 +5,66 @@ import {
   parseAndValidateCsv,
   reorderClientList,
   areClientOrdersEqual,
+  buildDefaultProcessingOrder,
   type OrderedClientInvoices,
 } from './csvRouteOrderingService';
-import type { RouteClientProcessingState } from '@/app/rutas/[id]/procesar/page';
+import type { RouteClientProcessingState } from '@/app/(main)/rutas/[id]/procesar/page';
 
 describe('csvRouteOrderingService', () => {
+  describe('buildDefaultProcessingOrder', () => {
+    it('converts successful route clients with invoices into OrderedClientInvoices preserving query order', () => {
+      const clientStates: RouteClientProcessingState[] = [
+        {
+          clientId: 'CLI-001',
+          status: 'success',
+          invoices: [
+            { id: 'INV-001', customer: 'CLI-001', period_start: '', period_end: '', status: 'ISSUED', issue_date: '', due_date: '', total_amount: 100000, items: [] },
+            { id: 'INV-002', customer: 'CLI-001', period_start: '', period_end: '', status: 'ISSUED', issue_date: '', due_date: '', total_amount: 50000, items: [] },
+          ],
+        },
+        {
+          clientId: 'CLI-002',
+          status: 'empty',
+          invoices: [],
+        },
+        {
+          clientId: 'CLI-003',
+          status: 'error',
+          error: 'Connection timeout',
+          invoices: [],
+        },
+        {
+          clientId: 'CLI-004',
+          status: 'success',
+          invoices: [
+            { id: 'INV-003', customer: 'CLI-004', period_start: '', period_end: '', status: 'ISSUED', issue_date: '', due_date: '', total_amount: 200000, items: [] },
+          ],
+        },
+      ];
+
+      const result = buildDefaultProcessingOrder(clientStates);
+
+      assert.strictEqual(result.length, 2);
+      assert.strictEqual(result[0].clientId, 'CLI-001');
+      assert.strictEqual(result[0].orden, 1);
+      assert.strictEqual(result[0].totalAmount, 150000);
+      assert.strictEqual(result[0].invoices.length, 2);
+
+      assert.strictEqual(result[1].clientId, 'CLI-004');
+      assert.strictEqual(result[1].orden, 2);
+      assert.strictEqual(result[1].totalAmount, 200000);
+      assert.strictEqual(result[1].invoices.length, 1);
+    });
+
+    it('returns empty array when no clients have status === success and non-empty invoices', () => {
+      const clientStates: RouteClientProcessingState[] = [
+        { clientId: 'CLI-001', status: 'pending', invoices: [] },
+        { clientId: 'CLI-002', status: 'empty', invoices: [] },
+      ];
+      assert.deepStrictEqual(buildDefaultProcessingOrder(clientStates), []);
+    });
+  });
+
   describe('detectDelimiter', () => {
     it('detects comma delimiter correctly', () => {
       assert.strictEqual(detectDelimiter('id_cliente,orden'), ',');
